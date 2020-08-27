@@ -44,6 +44,27 @@ ERROR: There was an error during testing
 julia> g(Inf)
 Inf
 ```
+### Spec dispatch
+
+In true julia fashion, your `@pre_spec` and `@post_spec` functions will behave naturally under multiple dispatch,
+```julia
+f(x::Number) = x + 1
+@pre_spec f(x::Number) = @test isfinite(x)
+
+f(s::String) = s * "1"
+@pre_spec f(s::String) = @test last(s) == "_"
+
+julia> @validated f(NaN)
+Test Failed at REPL[38]:1
+  Expression: isfinite(x)
+ERROR: There was an error during testing
+
+julia> @validated f("hi")
+Test Failed at REPL[40]:1
+  Expression: last(s) == "_"
+   Evaluated: 'i' == "_"
+ERROR: There was an error during testing
+```
 
 ### Won't automatically testing all my code make it slow?
 Running code within the `@validated` context *will* impose a performance penalty, but 
